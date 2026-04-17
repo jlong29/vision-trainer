@@ -1,0 +1,10 @@
+docs/codex
+.agent/
+__pycache__/
+.pytest_cache/
+*.pyc
+.venv/
+data/
+runs/
+artifacts/
+.codex

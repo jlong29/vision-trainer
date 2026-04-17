@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vision-trainer"
+version = "0.1.0"
+description = "Bootstrap desktop training and curation tools for thermal YOLO workflows."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+  { name = "OpenAI Codex" }
+]
+dependencies = []
+
+[project.scripts]
+bootstrap-validate-packages = "bootstrap_train.validate_packages:main"
+bootstrap-ingest-phase1 = "bootstrap_train.ingest_phase1:main"
+bootstrap-inspect-phase2 = "bootstrap_train.inspect_phase2:main"
+bootstrap-train = "bootstrap_train.train:main"
+bootstrap-evaluate = "bootstrap_train.evaluate:main"
+bootstrap-export = "bootstrap_train.export:main"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]

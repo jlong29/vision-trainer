@@ -1,0 +1,13 @@
+task: detect
+mode: train
+model: yolo11n.pt
+imgsz: 640
+epochs: 5
+batch: 12
+device: 0
+workers: 8
+project: runs/train
+name: phase1_smoke_single_gpu
+patience: 20
+amp: true
+exist_ok: false

@@ -1,0 +1,8 @@
+task: detect
+mode: export
+format: onnx
+imgsz: 640
+device: 0
+half: false
+project: artifacts/exports
+name: candidate_onnx_fp32
