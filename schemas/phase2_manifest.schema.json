@@ -1,0 +1,207 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vision-trainer.local/schemas/phase2_manifest.schema.json",
+  "title": "Phase 2 Manifest",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "package_type",
+    "package_version",
+    "package_id",
+    "created_at",
+    "source_directory",
+    "source_count",
+    "clip_count",
+    "bundle_contract",
+    "sources",
+    "clips"
+  ],
+  "properties": {
+    "package_type": {
+      "type": "string"
+    },
+    "package_version": {
+      "type": "string"
+    },
+    "package_id": {
+      "type": "string"
+    },
+    "created_at": {
+      "type": "string"
+    },
+    "source_directory": {
+      "type": "string"
+    },
+    "source_count": {
+      "type": "integer"
+    },
+    "clip_count": {
+      "type": "integer"
+    },
+    "bundle_contract": {
+      "type": "string"
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/source"
+      }
+    },
+    "clips": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/clip"
+      }
+    }
+  },
+  "$defs": {
+    "source": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "source_path",
+        "clip_id",
+        "run_id",
+        "run_dir",
+        "vision_job_id",
+        "selected",
+        "selection_reason",
+        "frame_count",
+        "detection_count",
+        "track_count",
+        "bundle_dir",
+        "included_in_package",
+        "package_clip_id",
+        "package_clip_dir"
+      ],
+      "properties": {
+        "source_path": {
+          "type": "string"
+        },
+        "clip_id": {
+          "type": "string"
+        },
+        "run_id": {
+          "type": "string"
+        },
+        "run_dir": {
+          "type": "string"
+        },
+        "vision_job_id": {
+          "type": "string"
+        },
+        "selected": {
+          "type": "boolean"
+        },
+        "selection_reason": {
+          "type": "string"
+        },
+        "frame_count": {
+          "type": "integer"
+        },
+        "detection_count": {
+          "type": "integer"
+        },
+        "track_count": {
+          "type": "integer"
+        },
+        "bundle_dir": {
+          "type": "string"
+        },
+        "included_in_package": {
+          "type": "boolean"
+        },
+        "package_clip_id": {
+          "type": "string"
+        },
+        "package_clip_dir": {
+          "type": "string"
+        }
+      }
+    },
+    "clip": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "package_clip_id",
+        "package_clip_dir",
+        "source_path",
+        "clip_id",
+        "run_id",
+        "vision_job_id",
+        "selection_reason",
+        "created_at",
+        "start_ts",
+        "end_ts",
+        "fps",
+        "frame_count",
+        "width",
+        "height",
+        "detection_count",
+        "track_count",
+        "model_version",
+        "tracker_type",
+        "artifacts"
+      ],
+      "properties": {
+        "package_clip_id": {
+          "type": "string"
+        },
+        "package_clip_dir": {
+          "type": "string"
+        },
+        "source_path": {
+          "type": "string"
+        },
+        "clip_id": {
+          "type": "string"
+        },
+        "run_id": {
+          "type": "string"
+        },
+        "vision_job_id": {
+          "type": "string"
+        },
+        "selection_reason": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string"
+        },
+        "start_ts": {
+          "type": "number"
+        },
+        "end_ts": {
+          "type": "number"
+        },
+        "fps": {
+          "type": "number"
+        },
+        "frame_count": {
+          "type": "integer"
+        },
+        "width": {
+          "type": "integer"
+        },
+        "height": {
+          "type": "integer"
+        },
+        "detection_count": {
+          "type": "integer"
+        },
+        "track_count": {
+          "type": "integer"
+        },
+        "model_version": {
+          "type": "string"
+        },
+        "tracker_type": {
+          "type": "string"
+        },
+        "artifacts": {
+          "type": "object"
+        }
+      }
+    }
+  }
+}

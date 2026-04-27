@@ -40,7 +40,8 @@ Additional repo-specific rules:
   - `inspect_phase2.py` — summarizes the provenance-rich video package for review/debug use
   - `manifests.py` — shared JSON/YAML-lite parsing and manifest helpers
 - `configs/` — operator-editable configs for train/data/export workflows
-- `docs/` — durable package contracts, workflow guidance, and module/state docs
+- `docs/` — durable package contracts, workflow guidance, handoff notes, and module/state docs
+- `schemas/` — machine-readable manifest contracts that must stay aligned with the validators
 - `scripts/` — shell entrypoints for environment validation and smoke workflows
 - `tests/` — stdlib test coverage for validators and command builders
 
@@ -84,6 +85,8 @@ PYTHONPATH=src python -m bootstrap_train.evaluate --config configs/train/phase1_
 Notes:
 - Use the upstream phase 1 package root, not an arbitrary copy of individual images/labels.
 - Prefer single-GPU smoke validation first, then move to `device=0,1,2` only after the single-GPU run is clean.
+- Prefer the repo wrapper over raw `yolo detect train` because the wrapper materializes Ultralytics-safe dataset and split files with absolute paths.
+- Use `docs/handoffs/` for durable edge/desktop coordination and treat `.agent/` as scratch only.
 
 ---
 
@@ -98,6 +101,7 @@ Notes:
 - Metadata behavior:
   - Validators should fail loudly on missing required fields instead of inventing defaults
   - CLI overrides may replace config defaults, but they must not mutate upstream manifests
+  - Training/eval wrappers may generate temporary `.ultralytics_*` files inside a phase 1 package root to normalize paths for Ultralytics; these are consumer-side shims, not upstream contract changes
 - Runtime invariants:
   - `person` is the current target class for phase 1 bootstrap training
   - Provenance survives ingest, validation, training metadata, and export stubs
@@ -118,6 +122,7 @@ PYTHONPATH=src python -m compileall src tests
 Optional additional checks:
 ```bash
 PYTHONPATH=src python -m bootstrap_train.train --config configs/train/phase1_smoke.yaml --dataset-root /path/to/phase1_package --dry-run
+PYTHONPATH=src python -m unittest tests.test_contract_artifacts -v
 ```
 
 ---

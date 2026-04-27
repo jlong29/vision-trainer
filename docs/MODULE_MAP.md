@@ -13,5 +13,7 @@
 ## Supporting dirs
 
 - `configs/` contains operator-facing defaults.
+- `docs/handoffs/` contains tracked edge/desktop coordination notes.
+- `schemas/` contains machine-readable manifest contracts.
 - `scripts/` contains shell wrappers for common validation/bootstrap flows.
 - `tests/` contains stdlib-based regression coverage for validators and dry-run command construction.

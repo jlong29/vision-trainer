@@ -2,6 +2,8 @@
 
 This repo consumes two upstream package types produced on the Xavier NX. Those contracts are treated as durable inputs and must not be silently reshaped.
 
+Machine-readable versions of the manifest contracts live under `schemas/` and must stay aligned with `src/bootstrap_train/validate_packages.py`.
+
 ## Phase 1: direct training input
 
 Phase 1 is the current Ultralytics-ready dataset contract.

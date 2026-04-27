@@ -1,0 +1,159 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vision-trainer.local/schemas/phase1_manifest.schema.json",
+  "title": "Phase 1 Manifest",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "package_id",
+    "created_at",
+    "source_directory",
+    "source_count",
+    "image_count",
+    "label_count",
+    "train_image_count",
+    "val_image_count",
+    "class_map",
+    "sources",
+    "entries"
+  ],
+  "properties": {
+    "package_id": {
+      "type": "string"
+    },
+    "created_at": {
+      "type": "string"
+    },
+    "source_directory": {
+      "type": "string"
+    },
+    "source_count": {
+      "type": "integer"
+    },
+    "image_count": {
+      "type": "integer"
+    },
+    "label_count": {
+      "type": "integer"
+    },
+    "train_image_count": {
+      "type": "integer"
+    },
+    "val_image_count": {
+      "type": "integer"
+    },
+    "class_map": {
+      "type": "object"
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/source"
+      }
+    },
+    "entries": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/entry"
+      }
+    }
+  },
+  "$defs": {
+    "source": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "source_path",
+        "clip_id",
+        "run_id",
+        "vision_job_id",
+        "dataset_root",
+        "image_count",
+        "train_image_count",
+        "val_image_count",
+        "selection_reason"
+      ],
+      "properties": {
+        "source_path": {
+          "type": "string"
+        },
+        "clip_id": {
+          "type": "string"
+        },
+        "run_id": {
+          "type": "string"
+        },
+        "vision_job_id": {
+          "type": "string"
+        },
+        "dataset_root": {
+          "type": "string"
+        },
+        "image_count": {
+          "type": "integer"
+        },
+        "train_image_count": {
+          "type": "integer"
+        },
+        "val_image_count": {
+          "type": "integer"
+        },
+        "selection_reason": {
+          "type": "string"
+        }
+      }
+    },
+    "entry": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "image_path",
+        "label_path",
+        "split",
+        "frame_num",
+        "timestamp_sec",
+        "source_timestamp_sec",
+        "target_detection_count",
+        "source_path",
+        "source_clip_id",
+        "source_run_id",
+        "source_vision_job_id"
+      ],
+      "properties": {
+        "image_path": {
+          "type": "string"
+        },
+        "label_path": {
+          "type": "string"
+        },
+        "split": {
+          "type": "string"
+        },
+        "frame_num": {
+          "type": "integer"
+        },
+        "timestamp_sec": {
+          "type": "number"
+        },
+        "source_timestamp_sec": {
+          "type": "number"
+        },
+        "target_detection_count": {
+          "type": "integer"
+        },
+        "source_path": {
+          "type": "string"
+        },
+        "source_clip_id": {
+          "type": "string"
+        },
+        "source_run_id": {
+          "type": "string"
+        },
+        "source_vision_job_id": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
