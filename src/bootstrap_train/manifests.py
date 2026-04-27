@@ -98,6 +98,23 @@ def load_simple_yaml(path: str | Path) -> dict[str, Any]:
     return parse_simple_yaml(Path(path).read_text(encoding="utf-8"))
 
 
+def dump_simple_yaml(path: str | Path, mapping: dict[str, Any]) -> None:
+    """Write a small mapping-only YAML document used by repo configs and dataset shims."""
+
+    target = Path(path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    lines: list[str] = []
+    for key, value in mapping.items():
+        if isinstance(value, dict):
+            lines.append(f"{key}:")
+            for nested_key, nested_value in value.items():
+                lines.append(f"  {nested_key}: {nested_value}")
+        else:
+            scalar = "true" if value is True else "false" if value is False else value
+            lines.append(f"{key}: {scalar}")
+    target.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
 def ensure_mapping(value: Any, context: str) -> dict[str, Any]:
     """Ensure a manifest fragment is a mapping."""
 

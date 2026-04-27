@@ -6,7 +6,7 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
-from .manifests import load_simple_yaml
+from .manifests import dump_simple_yaml, load_simple_yaml
 from .validate_packages import validate_phase1_package
 
 
@@ -51,6 +51,48 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _read_split_entries(path: Path) -> list[str]:
+    return [line.strip() for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+
+
+def _materialize_ultralytics_split_file(package_root: Path, split_rel: str, target_name: str) -> Path:
+    source_split = package_root / split_rel
+    entries = _read_split_entries(source_split)
+    normalized_entries: list[str] = []
+    for entry in entries:
+        entry_path = Path(entry)
+        normalized_entries.append(str(entry_path if entry_path.is_absolute() else (package_root / entry_path).resolve()))
+
+    target_dir = package_root / ".ultralytics_splits"
+    target_dir.mkdir(exist_ok=True)
+    target_path = target_dir / target_name
+    target_path.write_text("\n".join(normalized_entries) + "\n", encoding="utf-8")
+    return target_path
+
+
+def materialize_ultralytics_dataset_yaml(package_root: str | Path) -> Path:
+    """Create a normalized dataset YAML that resolves paths from the real package root."""
+
+    root = Path(package_root).resolve()
+    source_yaml = load_config(root / "dataset.yaml")
+    train_split = _materialize_ultralytics_split_file(root, str(source_yaml["train"]), "train.txt")
+    val_split = _materialize_ultralytics_split_file(root, str(source_yaml["val"]), "val.txt")
+    normalized = {
+        "path": str(root),
+        "train": str(train_split),
+        "val": str(val_split),
+        "names": source_yaml["names"],
+    }
+    if "test" in source_yaml:
+        normalized["test"] = str(
+            _materialize_ultralytics_split_file(root, str(source_yaml["test"]), "test.txt")
+        )
+
+    target = root / ".ultralytics_dataset.yaml"
+    dump_simple_yaml(target, normalized)
+    return target
+
+
 def resolve_dataset_root(config: dict[str, Any], dataset_root: str | None) -> Path:
     if dataset_root:
         return Path(dataset_root)
@@ -75,7 +117,7 @@ def prepare_training_command(
         raise ValueError("phase 1 package validation failed")
 
     options = {key: value for key, value in config.items() if key not in {"task", "mode"}}
-    options["data"] = str((package_root / "dataset.yaml").resolve())
+    options["data"] = str(materialize_ultralytics_dataset_yaml(package_root))
     if device:
         options["device"] = device
     if name:

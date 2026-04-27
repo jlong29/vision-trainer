@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from .train import build_yolo_command, load_config, run_command
+from .train import build_yolo_command, load_config, materialize_ultralytics_dataset_yaml, run_command
 from .validate_packages import validate_phase1_package
 
 
@@ -36,7 +36,7 @@ def prepare_evaluation_command(
         raise ValueError("phase 1 package validation failed")
 
     options: dict[str, Any] = {key: value for key, value in config.items() if key not in {"task", "mode"}}
-    options["data"] = str((package_root / "dataset.yaml").resolve())
+    options["data"] = str(materialize_ultralytics_dataset_yaml(package_root))
     options["model"] = str(Path(weights).resolve())
     if device:
         options["device"] = device

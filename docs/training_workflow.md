@@ -29,3 +29,4 @@ Use `scripts/validate_env.sh` to re-check imports and GPU visibility on demand.
 - Prefer a clean machine during the first DDP validation run.
 - If instability appears, reduce `batch`, then `workers`, then `imgsz`.
 - GPU 0 may also drive display output, so keep an eye on its thermals and memory pressure.
+- Prefer the repo wrapper over raw `yolo detect train` so the dataset YAML and split files are normalized to absolute paths before Ultralytics reads them.

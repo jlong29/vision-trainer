@@ -212,13 +212,20 @@ def validate_phase1_package(root: str | Path) -> ValidationReport:
         return report
 
     dataset_yaml = load_simple_yaml(package_root / "dataset.yaml")
-    report.errors.extend(ensure_required_fields(dataset_yaml, ["path", "train", "val", "names"], "dataset.yaml"))
+    report.errors.extend(ensure_required_fields(dataset_yaml, ["train", "val", "names"], "dataset.yaml"))
     report.ok = not report.errors
     if report.errors:
         return report
 
-    if dataset_yaml.get("path") != ".":
-        report.add_warning("dataset.yaml path is not '.'; validators assume package-relative split paths")
+    dataset_path = dataset_yaml.get("path")
+    if dataset_path == ".":
+        report.add_warning(
+            "dataset.yaml path='.' can fail in raw Ultralytics CLI because relative paths may resolve outside the package root"
+        )
+    elif dataset_path not in {None, ""}:
+        candidate = Path(str(dataset_path))
+        if not candidate.is_absolute():
+            report.add_warning("dataset.yaml path is relative; prefer an absolute package root for direct Ultralytics CLI")
 
     names_mapping = _normalize_names_mapping(dataset_yaml.get("names"))
     if names_mapping.get("0") != "person":

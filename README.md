@@ -47,3 +47,15 @@ PYTHONPATH=src python -m bootstrap_train.inspect_phase2 --source /path/to/phase2
 - Phase 2 explains and extends phase 1.
 - Upstream Xavier runtime and packaging logic stay upstream.
 - Provenance fields in manifests are part of the contract and should survive every downstream step.
+
+## Ultralytics CLI note
+
+If you call raw `yolo detect train` directly, some Ultralytics versions mis-handle `dataset.yaml` files that use `path: .` and/or split files that contain relative image paths. The repo wrapper avoids that by generating a normalized dataset YAML plus normalized split files with absolute paths.
+
+Use the wrapper when possible:
+
+```bash
+PYTHONPATH=src python -m bootstrap_train.train \
+  --config configs/train/phase1_smoke.yaml \
+  --dataset-root /path/to/phase1_package
+```

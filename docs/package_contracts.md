@@ -25,6 +25,7 @@ Required behavior:
 - `images/` and `labels/` stay 1:1 aligned.
 - `splits/train.txt` and `splits/val.txt` contain relative image paths.
 - `manifest.json` preserves package, source, and entry provenance.
+- For direct raw Ultralytics CLI usage, prefer a dataset YAML whose `path` resolves to the absolute package root. Some Ultralytics versions also mis-handle split files that list relative image paths. The repo wrapper works around both issues by generating normalized temporary inputs for Ultralytics while preserving the upstream package contract unchanged.
 
 Important manifest fields:
 
