@@ -1,0 +1,5 @@
+path: .
+train: splits/train.txt
+val: splits/val.txt
+names:
+  0: person

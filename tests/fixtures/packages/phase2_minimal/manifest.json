@@ -1,0 +1,56 @@
+{
+  "package_type": "thermal_video_clip_dataset",
+  "package_version": "v1",
+  "package_id": "phase2-fixture",
+  "created_at": "2026-04-27T00:00:00Z",
+  "source_directory": "/tmp/source",
+  "source_count": 1,
+  "clip_count": 1,
+  "bundle_contract": "v1",
+  "sources": [
+    {
+      "source_path": "/tmp/source/video.mp4",
+      "clip_id": "clip-1",
+      "run_id": "run-1",
+      "run_dir": "/tmp/run-1",
+      "vision_job_id": "job-1",
+      "selected": true,
+      "selection_reason": "bootstrap",
+      "frame_count": 32,
+      "detection_count": 8,
+      "track_count": 2,
+      "bundle_dir": "/tmp/bundle",
+      "included_in_package": true,
+      "package_clip_id": "package-clip-1",
+      "package_clip_dir": "clips/package-clip-1"
+    }
+  ],
+  "clips": [
+    {
+      "package_clip_id": "package-clip-1",
+      "package_clip_dir": "clips/package-clip-1",
+      "source_path": "/tmp/source/video.mp4",
+      "clip_id": "clip-1",
+      "run_id": "run-1",
+      "vision_job_id": "job-1",
+      "selection_reason": "bootstrap",
+      "created_at": "2026-04-27T00:00:00Z",
+      "start_ts": 0.0,
+      "end_ts": 3.0,
+      "fps": 27.0,
+      "frame_count": 32,
+      "width": 640,
+      "height": 512,
+      "detection_count": 8,
+      "track_count": 2,
+      "model_version": "phase2-model",
+      "tracker_type": "bytetrack",
+      "artifacts": {
+        "clip": "clip.mp4",
+        "clip_manifest": "clip_manifest.json",
+        "detections": "detections.parquet",
+        "tracks": "tracks.parquet"
+      }
+    }
+  ]
+}

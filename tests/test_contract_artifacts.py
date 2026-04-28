@@ -9,10 +9,13 @@ from bootstrap_train.validate_packages import (
     PHASE1_ENTRY_FIELDS,
     PHASE1_SOURCE_FIELDS,
     PHASE1_TOP_LEVEL_FIELDS,
+    PHASE2_REQUIRED_CLIP_FILES,
     PHASE2_CLIP_FIELDS,
     PHASE2_SOURCE_FIELDS,
     PHASE2_TOP_LEVEL_FIELDS,
 )
+
+FIXTURE_PACKAGES_ROOT = Path("tests/fixtures/packages")
 
 
 def _load_json(path: str) -> Any:
@@ -101,6 +104,32 @@ class ContractArtifactsTest(unittest.TestCase):
         schema = _load_json("schemas/phase2_manifest.schema.json")
         fixture = _load_json("tests/fixtures/phase2_manifest_minimal.json")
         _assert_matches_schema(schema, fixture, schema)
+
+    def test_package_fixtures_match_contract_doc_layout(self) -> None:
+        doc_text = Path("docs/package_contracts.md").read_text(encoding="utf-8")
+
+        phase1_root = FIXTURE_PACKAGES_ROOT / "phase1_minimal"
+        for relative_path in [
+            "dataset.yaml",
+            "images",
+            "labels",
+            "manifest.json",
+            "splits/train.txt",
+            "splits/val.txt",
+        ]:
+            self.assertTrue((phase1_root / relative_path).exists(), relative_path)
+            self.assertIn(relative_path, doc_text)
+
+        phase2_root = FIXTURE_PACKAGES_ROOT / "phase2_minimal"
+        clip_root = phase2_root / "clips" / "package-clip-1"
+        self.assertTrue((phase2_root / "manifest.json").exists(), "manifest.json")
+        self.assertTrue((phase2_root / "clips").is_dir(), "clips")
+        self.assertIn("manifest.json", doc_text)
+        self.assertIn("clips/", doc_text)
+
+        for filename in PHASE2_REQUIRED_CLIP_FILES:
+            self.assertTrue((clip_root / filename).exists(), filename)
+            self.assertIn(filename, doc_text)
 
     def test_handoff_docs_exist(self) -> None:
         for path in [

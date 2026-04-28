@@ -7,6 +7,8 @@ from pathlib import Path
 
 from bootstrap_train.validate_packages import validate_phase1_package, validate_phase2_package
 
+FIXTURES_ROOT = Path(__file__).parent / "fixtures" / "packages"
+
 
 def build_phase1_package(root: Path) -> Path:
     (root / "images").mkdir(parents=True)
@@ -156,6 +158,12 @@ def build_phase2_package(root: Path) -> Path:
 
 
 class ValidatePackagesTest(unittest.TestCase):
+    def test_validate_phase1_package_fixture_ok(self) -> None:
+        report = validate_phase1_package(FIXTURES_ROOT / "phase1_minimal")
+        self.assertTrue(report.ok, report.errors)
+        self.assertEqual(report.counts["image_files"], 2)
+        self.assertEqual(report.counts["object_count"], 2)
+
     def test_validate_phase1_package_ok(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             report = validate_phase1_package(build_phase1_package(Path(tmp_dir)))
@@ -176,6 +184,11 @@ class ValidatePackagesTest(unittest.TestCase):
             report = validate_phase2_package(build_phase2_package(Path(tmp_dir)))
             self.assertTrue(report.ok, report.errors)
             self.assertEqual(report.counts["clip_dirs"], 1)
+
+    def test_validate_phase2_package_fixture_ok(self) -> None:
+        report = validate_phase2_package(FIXTURES_ROOT / "phase2_minimal")
+        self.assertTrue(report.ok, report.errors)
+        self.assertEqual(report.counts["clip_dirs"], 1)
 
 
 if __name__ == "__main__":
