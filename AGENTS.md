@@ -87,6 +87,7 @@ Notes:
 - Prefer single-GPU smoke validation first, then move to `device=0,1,2` only after the single-GPU run is clean.
 - Prefer the repo wrapper over raw `yolo detect train` because the wrapper materializes Ultralytics-safe dataset and split files with absolute paths.
 - Use `docs/handoffs/` for durable edge/desktop coordination and treat `.agent/` as scratch only.
+- If the task was initiated from the workspace as a system-level or cross-node goal, expect a workspace `ACTIVE_TASK.md` to exist first. Treat this repo's `.agent/TASK_BRIEF.md` as a seeded local subtask under that root task, not as a standalone top-level task.
 
 ---
 
