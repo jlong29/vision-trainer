@@ -87,7 +87,7 @@ Notes:
 - Prefer single-GPU smoke validation first, then move to `device=0,1,2` only after the single-GPU run is clean.
 - Prefer the repo wrapper over raw `yolo detect train` because the wrapper materializes Ultralytics-safe dataset and split files with absolute paths.
 - Use `docs/handoffs/` for durable edge/desktop coordination and treat `.agent/` as scratch only.
-- If the task was initiated from the workspace as a system-level or cross-node goal, expect a workspace `ACTIVE_TASK.md` to exist first. Treat this repo's `.agent/TASK_BRIEF.md` as a seeded local subtask under that root task, not as a standalone top-level task.
+- Every task starts at the workspace layer. Expect a workspace `ACTIVE_TASK.md` to exist first, and treat this repo's `.agent/TASK_BRIEF.md` as a seeded local subtask under that root task, not as a standalone top-level task.
 
 ---
 
@@ -138,7 +138,7 @@ PYTHONPATH=src python -m unittest tests.test_contract_artifacts -v
 ---
 
 ## Working agreement (four-phase execution)
-### Phase 1 — Plan + Task Definition (read-only)
+### Phase 1 — Plan + Task Definition
 Goal: build repo-aware understanding and produce **one** task artifact.
 
 Rules:
@@ -147,19 +147,18 @@ Rules:
 - Restate goal + success criteria.
 - Identify the minimal relevant files and why.
 - Propose a plan + verification commands.
-- Stop and ask before proceeding.
 
 **Phase 1 output (the only artifact):**
+- Create a branch for the task using a short name reflecting the goal of the task e.g. `add-oAuth`, `fix-callbacks`
 - Write the plan to: `.agent/TASK_BRIEF.md`
 
 `.agent/` is **untracked** and exists specifically for this ephemeral brief. The brief may be updated in Phase 2.
 
 At the end of Phase 1:
 - Ensure `.agent/TASK_BRIEF.md` is up to date.
-- Then run `/compact` before continuing (to preserve working memory).
 
 Notes:
-  - A template for `.agent/TASK_BRIEF.md` is already available and it is copied from `docs/codex/TASK_BRIEF_TEMPLATE.md`
+  - A template for `.agent/TASK_BRIEF.md` is already available and it is copied from `docs/agent/TASK_BRIEF_TEMPLATE.md`
 
 ### Phase 2 — Implement + Learn (write + verify, no git history operations)
 Goal: Execute the plan developed in Phase 1 and memorialized in `.agent/TASK_BRIEF.md`
@@ -173,10 +172,9 @@ Rules:
   2) apply changes
   3) run verification and report results
   4) show diff summary and key hunks
-- Finish with `git status` and suggested commit message(s) (human will commit).
 
 ## Phase 3 — Debug mode
-Goal: Review the output of Phase 2 and block until the user's review it complete.
+Goal: Review the output of Phase 2 and thoroughly test until all outputs are predictable and functional.
 
 When debugging bugs introduced during Phase 2, follow this strict loop:
 1) Reproduce the failure with the exact command provided.
@@ -184,7 +182,7 @@ When debugging bugs introduced during Phase 2, follow this strict loop:
 3) Propose 1–2 hypotheses and what evidence would confirm each.
 4) Add a targeted regression test when feasible.
 5) Make a **surgical** fix (minimal files), re-run the failing test(s), then broaden coverage.
-6) Update `.agent/TASK_BRIEF.md` with what changed and why; `/compact` if context is getting large.
+6) Update `.agent/TASK_BRIEF.md` with what changed and why
 
 ## Phase 4 — Task completion / closeout procedure
 Goal: Summary successful completed work and clean up.
@@ -202,17 +200,19 @@ When the task is complete (as defined in `.agent/TASK_BRIEF.md`), the agent shou
    - Update `docs/PROJECT_STATE.md` for “current operational workflow.”
    - Update `docs/MODULE_MAP.md` if module boundaries/entrypoints changed.
    - Update `docs/METRICS_AND_DIAGNOSTICS.md` if diagnostics/metrics interpretation changed.
+   - Finish with `git status` and commit message(s)
+   - commit code
 4) Follow the procedure defined in `Cleanup at task closeout` (defined below)
 
 ### Cleanup at task closeout
 At completion:
 1. Summarize “gotchas / decisions / commands / TODOs” and promote them to durable docs (see `Task completion / closeout procedure`).
-2. Create a folder `docs/codex/tasks/<task_slug>` under `docs/codex/tasks`
+2. Create a folder `docs/agent/tasks/<task_slug>` under `docs/agent/tasks`
   - e.g. <task_slug> = YYYYMMDD_HHMM_<short_topic>
-3. Move `.agent/TASK_BRIEF.md` to `docs/codex/tasks/<task_slug>/`
-4. Move `.agent/MEMORY.md`to `docs/codex/tasks/<task_slug>/`
+3. Move `.agent/TASK_BRIEF.md` to `docs/agent/tasks/<task_slug>/`
+4. Move `.agent/MEMORY.md` to `docs/agent/tasks/<task_slug>/`
 5. Empty `.agent/logs/` (or delete the directory contents)
-6. Write the closeout into `docs/codex/tasks/<task_slug>/CLOSEOUT.md`
+6. Write the closeout into `docs/agent/tasks/<task_slug>/CLOSEOUT.md`
 7. Verify: `.agent/TASK_BRIEF.md` and `.agent/MEMORY.md` exist (templates), `.agent/logs/` empty, and archive folder contains `TASK_BRIEF.md`, `MEMORY.md`, and `CLOSEOUT.md`
 
 ---
@@ -251,7 +251,7 @@ Maintain **≤ 200 lines** when possible. Use bullets. Suggested headings:
 - **Verification run** (commands + outcomes)
 
 Notes:
-  - A template for `.agent/MEMORY.md` is already available and it is copied from `docs/codex/MEMORY_TEMPLATE.md`
+  - A template for `.agent/MEMORY.md` is already available and it is copied from `docs/agent/MEMORY_TEMPLATE.md`
 
 ### Log naming convention
 Store logs as:
