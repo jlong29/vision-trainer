@@ -6,6 +6,7 @@ This directory contains machine-readable contract artifacts for upstream package
 
 - `phase1_manifest.schema.json` — schema for the Phase 1 `manifest.json`
 - `phase2_manifest.schema.json` — schema for the Phase 2 `manifest.json`
+- `curated_release_manifest.schema.json` — schema for a curator-emitted release `manifest.json`
 
 ## Update rules
 

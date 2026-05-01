@@ -101,6 +101,17 @@ PHASE2_REQUIRED_CLIP_FILES = [
     "detections.parquet",
     "tracks.parquet",
 ]
+CURATED_RELEASE_TOP_LEVEL_FIELDS = [
+    "release_id",
+    "source_package_ids",
+    "annotation_versions",
+    "split_policy",
+    "label_policy",
+    "class_list",
+    "counts_by_split",
+    "counts_by_label_source",
+    "created_at",
+]
 
 
 @dataclass
@@ -135,6 +146,17 @@ def _normalize_names_mapping(names: Any) -> dict[str, Any]:
     for key, value in names.items():
         normalized[str(key)] = value
     return normalized
+
+
+def _dataset_class_list(names: Any) -> list[str]:
+    names_mapping = _normalize_names_mapping(names)
+    class_names: list[str] = []
+    for index in range(len(names_mapping)):
+        key = str(index)
+        if key not in names_mapping:
+            return []
+        class_names.append(str(names_mapping[key]))
+    return class_names
 
 
 def _label_path_for_image(root: Path, image_rel: str) -> Path:
@@ -417,10 +439,173 @@ def validate_phase2_package(root: str | Path) -> ValidationReport:
     return report
 
 
+def _ensure_string_list(value: Any, context: str, report: ValidationReport) -> list[str]:
+    if not isinstance(value, list):
+        report.add_error(f"{context} must be a list")
+        return []
+    result: list[str] = []
+    for index, item in enumerate(value):
+        if not isinstance(item, str):
+            report.add_error(f"{context}[{index}] must be a string")
+            continue
+        result.append(item)
+    return result
+
+
+def _ensure_int_mapping(value: Any, context: str, report: ValidationReport) -> dict[str, int]:
+    if not isinstance(value, dict):
+        report.add_error(f"{context} must be a mapping")
+        return {}
+    result: dict[str, int] = {}
+    for key, item in value.items():
+        if isinstance(item, bool) or not isinstance(item, int):
+            report.add_error(f"{context}.{key} must be an integer")
+            continue
+        result[str(key)] = item
+    return result
+
+
+def validate_curated_release(root: str | Path) -> ValidationReport:
+    release_root = Path(root)
+    report = ValidationReport(phase="curated_release", root=str(release_root.resolve()))
+
+    if not release_root.exists() or not release_root.is_dir():
+        report.add_error("curated release root does not exist or is not a directory")
+        return report
+
+    required_paths = [
+        release_root / "dataset.yaml",
+        release_root / "manifest.json",
+        release_root / "splits" / "train.txt",
+        release_root / "splits" / "val.txt",
+    ]
+    for required in required_paths:
+        if not required.exists():
+            report.add_error(f"missing required path: {required.relative_to(release_root)}")
+    if report.errors:
+        return report
+
+    dataset_yaml = load_simple_yaml(release_root / "dataset.yaml")
+    report.errors.extend(ensure_required_fields(dataset_yaml, ["train", "val", "names"], "dataset.yaml"))
+    report.ok = not report.errors
+    if report.errors:
+        return report
+
+    manifest = ensure_mapping(load_json(release_root / "manifest.json"), "manifest.json")
+    report.errors.extend(ensure_required_fields(manifest, CURATED_RELEASE_TOP_LEVEL_FIELDS, "manifest.json"))
+    report.ok = not report.errors
+    if report.errors:
+        return report
+
+    source_package_ids = _ensure_string_list(
+        manifest.get("source_package_ids"),
+        "manifest.json source_package_ids",
+        report,
+    )
+    annotation_versions = _ensure_string_list(
+        manifest.get("annotation_versions"),
+        "manifest.json annotation_versions",
+        report,
+    )
+    class_list = _ensure_string_list(manifest.get("class_list"), "manifest.json class_list", report)
+    counts_by_split = _ensure_int_mapping(manifest.get("counts_by_split"), "manifest.json counts_by_split", report)
+    counts_by_label_source = _ensure_int_mapping(
+        manifest.get("counts_by_label_source"),
+        "manifest.json counts_by_label_source",
+        report,
+    )
+
+    if not isinstance(manifest.get("split_policy"), dict):
+        report.add_error("manifest.json split_policy must be a mapping")
+    if not isinstance(manifest.get("label_policy"), dict):
+        report.add_error("manifest.json label_policy must be a mapping")
+    if not source_package_ids:
+        report.add_error("manifest.json source_package_ids must not be empty")
+    if not annotation_versions:
+        report.add_error("manifest.json annotation_versions must not be empty")
+    if not class_list:
+        report.add_error("manifest.json class_list must not be empty")
+    elif class_list[0] != "person":
+        report.add_error("manifest.json class_list[0] must be 'person' for the current trainer target")
+
+    dataset_classes = _dataset_class_list(dataset_yaml.get("names"))
+    if not dataset_classes:
+        report.add_error("dataset.yaml names must be a zero-indexed mapping")
+    elif class_list and dataset_classes != class_list:
+        report.add_error("dataset.yaml names must match manifest.json class_list")
+
+    split_counts: dict[str, int] = {}
+    split_images: list[str] = []
+    object_count = 0
+    for split_name in ["train", "val", "test"]:
+        split_rel = dataset_yaml.get(split_name)
+        if split_rel in {None, ""}:
+            continue
+        split_path = release_root / str(split_rel)
+        if not split_path.exists():
+            report.add_error(f"dataset.yaml references missing {split_name} split: {split_rel}")
+            continue
+        split_entries = _read_split_file(split_path)
+        split_counts[split_name] = len(split_entries)
+        split_images.extend(split_entries)
+        for image_rel in split_entries:
+            image_path = Path(image_rel)
+            resolved_image = image_path if image_path.is_absolute() else release_root / image_path
+            if not resolved_image.exists():
+                report.add_error(f"missing image referenced by {split_name} split: {image_rel}")
+                continue
+
+            label_path = _label_path_for_image(release_root, image_rel)
+            if not label_path.exists():
+                report.add_error(f"missing label for {split_name} image: {image_rel}")
+                continue
+            object_count += _validate_yolo_label_file(
+                label_path,
+                f"label {label_path.relative_to(release_root)}",
+                report,
+            )
+
+    for split_name, expected_count in counts_by_split.items():
+        observed_count = split_counts.get(split_name, 0)
+        if expected_count != observed_count:
+            report.add_error(
+                f"manifest.json counts_by_split.{split_name}={expected_count} "
+                f"does not match observed count {observed_count}"
+            )
+
+    provenance_records = manifest.get("provenance_records", [])
+    provenance_paths = _ensure_string_list(provenance_records, "manifest.json provenance_records", report)
+    for relative_path in provenance_paths:
+        record_path = release_root / relative_path
+        if not record_path.exists():
+            report.add_error(f"manifest.json references missing provenance record: {relative_path}")
+
+    report.counts = {
+        "train_images": split_counts.get("train", 0),
+        "val_images": split_counts.get("val", 0),
+        "test_images": split_counts.get("test", 0),
+        "split_images": len(split_images),
+        "object_count": object_count,
+        "provenance_record_files": len(provenance_paths),
+        "label_sources": len(counts_by_label_source),
+    }
+    report.details = {
+        "release_id": manifest.get("release_id"),
+        "source_package_ids": source_package_ids,
+        "annotation_versions": annotation_versions,
+        "class_list": class_list,
+        "counts_by_label_source": counts_by_label_source,
+    }
+
+    report.ok = not report.errors
+    return report
+
+
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Validate phase 1 and phase 2 package contracts.")
+    parser = argparse.ArgumentParser(description="Validate package and curated release contracts.")
     parser.add_argument("--phase1", action="append", default=[], help="Path to a phase 1 package root.")
     parser.add_argument("--phase2", action="append", default=[], help="Path to a phase 2 package root.")
+    parser.add_argument("--release", action="append", default=[], help="Path to a curated release root.")
     return parser
 
 
@@ -428,14 +613,16 @@ def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
 
-    if not args.phase1 and not args.phase2:
-        parser.error("provide at least one --phase1 or --phase2 path")
+    if not args.phase1 and not args.phase2 and not args.release:
+        parser.error("provide at least one --phase1, --phase2, or --release path")
 
     reports: list[ValidationReport] = []
     for root in args.phase1:
         reports.append(validate_phase1_package(root))
     for root in args.phase2:
         reports.append(validate_phase2_package(root))
+    for root in args.release:
+        reports.append(validate_curated_release(root))
 
     payload: Any
     if len(reports) == 1:

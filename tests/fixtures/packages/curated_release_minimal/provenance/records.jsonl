@@ -1,0 +1,2 @@
+{"image_path":"images/frame_0001.jpg","label_path":"labels/frame_0001.txt","split":"train","label_source":"pseudo","source_package_id":"phase1-sample","annotation_version":"pseudo-v1"}
+{"image_path":"images/frame_0002.jpg","label_path":"labels/frame_0002.txt","split":"val","label_source":"pseudo","source_package_id":"phase1-sample","annotation_version":"pseudo-v1"}

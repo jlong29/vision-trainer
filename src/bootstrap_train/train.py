@@ -7,7 +7,10 @@ from pathlib import Path
 from typing import Any
 
 from .manifests import dump_simple_yaml, load_simple_yaml
-from .validate_packages import validate_phase1_package
+from .validate_packages import validate_curated_release, validate_phase1_package
+
+
+DATASET_KINDS = {"phase1", "curated_release"}
 
 
 def load_config(path: str | Path) -> dict[str, Any]:
@@ -43,7 +46,12 @@ def run_command(command: list[str], dry_run: bool = False) -> int:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Launch a config-driven Ultralytics training run.")
     parser.add_argument("--config", required=True, help="Training config YAML.")
-    parser.add_argument("--dataset-root", help="Phase 1 package root. Required unless config sets data=...")
+    parser.add_argument("--dataset-root", help="Package or curated release root. Required unless config sets data=...")
+    parser.add_argument(
+        "--dataset-kind",
+        choices=sorted(DATASET_KINDS),
+        help="Dataset contract to validate before training. Defaults to config dataset_kind or phase1.",
+    )
     parser.add_argument("--device", help="Override the configured device selection.")
     parser.add_argument("--name", help="Override the configured run name.")
     parser.add_argument("--project", help="Override the configured project directory.")
@@ -106,17 +114,25 @@ def resolve_dataset_root(config: dict[str, Any], dataset_root: str | None) -> Pa
 def prepare_training_command(
     config_path: str | Path,
     dataset_root: str | None = None,
+    dataset_kind: str | None = None,
     device: str | None = None,
     name: str | None = None,
     project: str | None = None,
 ) -> dict[str, Any]:
     config = load_config(config_path)
     package_root = resolve_dataset_root(config, dataset_root)
-    validation = validate_phase1_package(package_root)
+    selected_kind = str(dataset_kind or config.get("dataset_kind", "phase1"))
+    if selected_kind not in DATASET_KINDS:
+        raise ValueError(f"dataset_kind must be one of {sorted(DATASET_KINDS)}")
+    validation = (
+        validate_curated_release(package_root)
+        if selected_kind == "curated_release"
+        else validate_phase1_package(package_root)
+    )
     if not validation.ok:
-        raise ValueError("phase 1 package validation failed")
+        raise ValueError(f"{selected_kind} validation failed")
 
-    options = {key: value for key, value in config.items() if key not in {"task", "mode"}}
+    options = {key: value for key, value in config.items() if key not in {"task", "mode", "dataset_kind"}}
     options["data"] = str(materialize_ultralytics_dataset_yaml(package_root))
     if device:
         options["device"] = device
@@ -131,6 +147,13 @@ def prepare_training_command(
     return {
         "command": command,
         "config": config,
+        "dataset_kind": selected_kind,
+        "source": {
+            "kind": selected_kind,
+            "root": str(package_root.resolve()),
+            "id": validation.details.get("release_id") or validation.details.get("package_id"),
+            "details": validation.details,
+        },
         "validation": validation.to_dict(),
     }
 
@@ -141,6 +164,7 @@ def main(argv: list[str] | None = None) -> int:
     prepared = prepare_training_command(
         args.config,
         dataset_root=args.dataset_root,
+        dataset_kind=args.dataset_kind,
         device=args.device,
         name=args.name,
         project=args.project,

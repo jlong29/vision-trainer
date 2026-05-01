@@ -1,0 +1,33 @@
+{
+  "annotation_versions": [
+    "pseudo-v1"
+  ],
+  "class_list": [
+    "person"
+  ],
+  "counts_by_label_source": {
+    "pseudo": 2
+  },
+  "counts_by_split": {
+    "test": 0,
+    "train": 1,
+    "val": 1
+  },
+  "created_at": "2026-04-30T00:00:00Z",
+  "label_policy": {
+    "allowed_sources": "pseudo",
+    "target_class": "person"
+  },
+  "provenance_records": [
+    "provenance/records.jsonl"
+  ],
+  "release_id": "curated-release-sample",
+  "source_package_ids": [
+    "phase1-sample"
+  ],
+  "split_policy": {
+    "test": "none",
+    "train": "pseudo",
+    "val": "pseudo-smoke"
+  }
+}
