@@ -1,11 +1,16 @@
 from __future__ import annotations
 
 import json
+import shutil
 import tempfile
 import unittest
 from pathlib import Path
 
-from bootstrap_train.validate_packages import validate_phase1_package, validate_phase2_package
+from bootstrap_train.validate_packages import (
+    validate_curated_release,
+    validate_phase1_package,
+    validate_phase2_package,
+)
 
 FIXTURES_ROOT = Path(__file__).parent / "fixtures" / "packages"
 
@@ -157,6 +162,11 @@ def build_phase2_package(root: Path) -> Path:
     return root
 
 
+def build_curated_release(root: Path) -> Path:
+    shutil.copytree(FIXTURES_ROOT / "curated_release_minimal", root)
+    return root
+
+
 class ValidatePackagesTest(unittest.TestCase):
     def test_validate_phase1_package_fixture_ok(self) -> None:
         report = validate_phase1_package(FIXTURES_ROOT / "phase1_minimal")
@@ -189,6 +199,28 @@ class ValidatePackagesTest(unittest.TestCase):
         report = validate_phase2_package(FIXTURES_ROOT / "phase2_minimal")
         self.assertTrue(report.ok, report.errors)
         self.assertEqual(report.counts["clip_dirs"], 1)
+
+    def test_validate_curated_release_fixture_ok(self) -> None:
+        report = validate_curated_release(FIXTURES_ROOT / "curated_release_minimal")
+        self.assertTrue(report.ok, report.errors)
+        self.assertEqual(report.details["release_id"], "curated-release-sample")
+        self.assertEqual(report.details["source_package_ids"], ["phase1-sample"])
+        self.assertEqual(report.details["annotation_versions"], ["pseudo-v1"])
+        self.assertEqual(report.counts["train_images"], 1)
+        self.assertEqual(report.counts["val_images"], 1)
+
+    def test_validate_curated_release_rejects_missing_required_manifest_field(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = build_curated_release(Path(tmp_dir) / "release")
+
+            manifest_path = root / "manifest.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            del manifest["annotation_versions"]
+            manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+            report = validate_curated_release(root)
+            self.assertFalse(report.ok)
+            self.assertTrue(any("annotation_versions" in error for error in report.errors))
 
 
 if __name__ == "__main__":

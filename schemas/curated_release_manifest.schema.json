@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vision-trainer.local/schemas/curated_release_manifest.schema.json",
+  "title": "Curated Release Manifest",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "release_id",
+    "source_package_ids",
+    "annotation_versions",
+    "split_policy",
+    "label_policy",
+    "class_list",
+    "counts_by_split",
+    "counts_by_label_source",
+    "created_at"
+  ],
+  "properties": {
+    "release_id": {
+      "type": "string"
+    },
+    "source_package_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "annotation_versions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "split_policy": {
+      "type": "object"
+    },
+    "label_policy": {
+      "type": "object"
+    },
+    "class_list": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "counts_by_split": {
+      "type": "object"
+    },
+    "counts_by_label_source": {
+      "type": "object"
+    },
+    "created_at": {
+      "type": "string"
+    },
+    "provenance_records": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

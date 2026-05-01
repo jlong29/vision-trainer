@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from bootstrap_train.validate_packages import (
+    CURATED_RELEASE_TOP_LEVEL_FIELDS,
     PHASE1_ENTRY_FIELDS,
     PHASE1_SOURCE_FIELDS,
     PHASE1_TOP_LEVEL_FIELDS,
@@ -95,6 +96,10 @@ class ContractArtifactsTest(unittest.TestCase):
         self.assertEqual(schema["$defs"]["source"]["required"], PHASE2_SOURCE_FIELDS)
         self.assertEqual(schema["$defs"]["clip"]["required"], PHASE2_CLIP_FIELDS)
 
+    def test_curated_release_schema_matches_validator_constants(self) -> None:
+        schema = _load_json("schemas/curated_release_manifest.schema.json")
+        self.assertEqual(schema["required"], CURATED_RELEASE_TOP_LEVEL_FIELDS)
+
     def test_phase1_fixture_matches_schema(self) -> None:
         schema = _load_json("schemas/phase1_manifest.schema.json")
         fixture = _load_json("tests/fixtures/phase1_manifest_minimal.json")
@@ -103,6 +108,11 @@ class ContractArtifactsTest(unittest.TestCase):
     def test_phase2_fixture_matches_schema(self) -> None:
         schema = _load_json("schemas/phase2_manifest.schema.json")
         fixture = _load_json("tests/fixtures/phase2_manifest_minimal.json")
+        _assert_matches_schema(schema, fixture, schema)
+
+    def test_curated_release_fixture_matches_schema(self) -> None:
+        schema = _load_json("schemas/curated_release_manifest.schema.json")
+        fixture = _load_json("tests/fixtures/curated_release_manifest_minimal.json")
         _assert_matches_schema(schema, fixture, schema)
 
     def test_package_fixtures_match_contract_doc_layout(self) -> None:
@@ -130,6 +140,18 @@ class ContractArtifactsTest(unittest.TestCase):
         for filename in PHASE2_REQUIRED_CLIP_FILES:
             self.assertTrue((clip_root / filename).exists(), filename)
             self.assertIn(filename, doc_text)
+
+        curated_release_root = FIXTURE_PACKAGES_ROOT / "curated_release_minimal"
+        for relative_path in [
+            "dataset.yaml",
+            "manifest.json",
+            "splits/train.txt",
+            "splits/val.txt",
+            "splits/test.txt",
+            "provenance/records.jsonl",
+        ]:
+            self.assertTrue((curated_release_root / relative_path).exists(), relative_path)
+            self.assertIn(relative_path, doc_text)
 
     def test_handoff_docs_exist(self) -> None:
         for path in [
